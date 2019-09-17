@@ -55,17 +55,13 @@ export function listImages(page = 0) {
     return Image.find().sort('createdAt').skip(images).limit(10);
 }
 
-export function createImage(data) {
-    // const image = new Image({
-    //     data: fs.readFileSync(data.files.userPhoto.path),
-    //     contentType: 'image/png',
-    //     createdAt: new Date()
-    // });
-    // console.log('====================================')
-    // console.log(data.prototypeModel)
-    // console.log('====================================')
-    return console.dir(data.files)
-    // return data
+export function createImage(file) {
+    const image = new Image({
+        data: fs.readFileSync(file.path),
+        contentType: file.mimetype ? file.mimetype : 'image/png',
+        createdAt: new Date()
+    });
+    return image.save();
 }
 
 // export function updateImage(id, params) {
@@ -78,7 +74,7 @@ export function getData() {
 
 export function listItems(page = 0, expiried) {
     let item = page * 10
-    let expiredValue = expiried ? { "expiried": expiried } : undefined;
+    let expiredValue = expiried ? { "expiried": expiried, "deleted": false } : { "deleted": false };
     // console.log('====================================')
     // console.log(page, expiried)
     // console.log('====================================')

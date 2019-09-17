@@ -14,6 +14,8 @@ var _http = _interopRequireDefault(require("http"));
 
 var _path = _interopRequireDefault(require("path"));
 
+var _fs = _interopRequireDefault(require("fs"));
+
 var db = _interopRequireWildcard(require("./utils/DataBaseUtils"));
 
 var _config = require("../etc/config.json");
@@ -24,11 +26,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const multer = require('multer');
 
-const bcrypt = require('bcrypt'); // const options = {
-//     key: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/myjpg.ru', 'privkey.pem')),
-//     cert: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/myjpg.ru', 'fullchain.pem'))
-// }
+const upload = multer({
+  dest: 'upload/'
+});
 
+const bcrypt = require('bcrypt'); // const options = {
+//     key: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/site.ru', 'privkey.pem')),
+//     cert: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/site.ru', 'fullchain.pem'))
+// }
 
 const app = (0, _express.default)();
 db.setUpConnection();
@@ -39,12 +44,7 @@ app.use((0, _cors.default)({
 app.use((0, _expressBasicAuth.default)({
   authorizer: myAsyncAuthorizer,
   authorizeAsync: true
-})); // app.use(multer({
-//     dest: './uploads/',
-//     rename: function (fieldname, filename) {
-//         return filename;
-//     },
-// }));
+}));
 
 app.get('/users', (req, res) => {
   console.log('====================================');
@@ -64,13 +64,22 @@ app.get('/images/:id', (req, res) => {
 app.get('/images', (req, res) => {
   db.listImages(req.query.page).then(async data => await res.send(data)).catch(err => res.send(err));
 });
-app.post('/images', (req, res) => {
-  console.log(req.files);
-  db.createImage(req).then(data => res.send(data)).catch(err => res.send(err));
+app.post('/images', upload.single('file'), (req, res) => {
+  const file = req.file;
+
+  if (!file) {
+    const error = new Error('Please upload a file');
+    error.httpStatusCode = 400;
+    return next(error);
+  } // res.send(file)
+
+
+  db.createImage(file).then(data => res.send(data)).catch(err => res.send(err));
 });
 app.patch('/images/:id', (req, res) => {
   db.updateImage(req.params.id, req.body).then(data => res.send(data)).catch(err => res.send(err));
 });
+
 app.get('/items', (req, res) => db.listItems(req.query.page, req.query.expiried).then(data => res.send(data)).catch(err => res.send(err)));
 app.get('/items/:id', (req, res) => db.getItems(req.params.id).then(data => res.send(data)).catch(err => res.send(err)));
 app.post('/items', (req, res) => db.createItems(req.body).then(data => res.send(data)).catch(err => res.send(err)));
@@ -81,9 +90,9 @@ function myAsyncAuthorizer(username, password, cb) {
   db.listUsers().then(data => {
     data.forEach(async (item, i) => {
       const match = await bcrypt.compare(password, item.password);
-      console.log('====================================');
-      console.log(match);
-      console.log('====================================');
+      // console.log('====================================');
+      // console.log(match);
+      // console.log('====================================');
 
       if (match) {
         if (item.name === username) {

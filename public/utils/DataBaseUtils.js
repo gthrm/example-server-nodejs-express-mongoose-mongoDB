@@ -85,16 +85,17 @@ function listImages() {
   return Image.find().sort('createdAt').skip(images).limit(10);
 }
 
-function createImage(data) {
-  // const image = new Image({
-  //     data: fs.readFileSync(data.files.userPhoto.path),
-  //     contentType: 'image/png',
-  //     createdAt: new Date()
-  // });
-  // console.log('====================================')
+function createImage(file) {
+  const image = new Image({
+    data: _fs.default.readFileSync(file.path),
+    contentType: file.mimetype ? file.mimetype : 'image/png',
+    createdAt: new Date()
+  }); // console.log('====================================')
   // console.log(data.prototypeModel)
   // console.log('====================================')
-  return console.dir(data.files); // return data
+  // return data
+
+  return image.save();
 } // export function updateImage(id, params) {
 //     return Image.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
 // }
@@ -109,8 +110,11 @@ function listItems() {
   let expiried = arguments.length > 1 ? arguments[1] : undefined;
   let item = page * 10;
   let expiredValue = expiried ? {
-    "expiried": expiried
-  } : undefined; // console.log('====================================')
+    "expiried": expiried,
+    "deleted": false
+  } : {
+    "deleted": false
+  }; // console.log('====================================')
   // console.log(page, expiried)
   // console.log('====================================')
 

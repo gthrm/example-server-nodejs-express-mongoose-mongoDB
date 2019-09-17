@@ -5,21 +5,26 @@ import basicAuth from "express-basic-auth";
 import https from 'https';
 import http from 'http';
 import path from 'path';
+import fs from 'fs';
 
 import * as db from './utils/DataBaseUtils';
 import { serverPort } from "../etc/config.json";
+
 const multer = require('multer');
+const upload = multer({ dest: 'upload/' });
 const bcrypt = require('bcrypt');
 
 // const options = {
-//     key: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/myjpg.ru', 'privkey.pem')),
-//     cert: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/myjpg.ru', 'fullchain.pem'))
+//     key: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/site.ru', 'privkey.pem')),
+//     cert: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/site.ru', 'fullchain.pem'))
 // }
 
 const app = express();
+
 db.setUpConnection();
 
 app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }))
 
 app.use(cors({ origin: '*' }));
 
@@ -30,12 +35,7 @@ app.use(
     })
 );
 
-// app.use(multer({
-//     dest: './uploads/',
-//     rename: function (fieldname, filename) {
-//         return filename;
-//     },
-// }));
+
 
 app.get('/users', (req, res) => {
     console.log('====================================')
@@ -56,10 +56,19 @@ app.get('/images', (req, res) => {
     db.listImages(req.query.page).then(async data => await res.send(data)).catch(err => res.send(err))
 });
 
-app.post('/images', (req, res) => {
-    console.log(req.files)
-    db.createImage(req).then(data => res.send(data)).catch(err => res.send(err))
-});
+app.post('/images',
+    upload.single('file'),
+    (req, res) => {
+        const file = req.file
+        if (!file) {
+            const error = new Error('Please upload a file')
+            error.httpStatusCode = 400
+            return next(error)
+        }
+        // res.send(file)
+
+        db.createImage(file).then(data => res.send(data)).catch(err => res.send(err))
+    });
 
 app.patch('/images/:id', (req, res) => {
     db.updateImage(req.params.id, req.body)
@@ -85,13 +94,8 @@ function myAsyncAuthorizer(username, password, cb) {
 
                 data.forEach(
                     async (item, i) => {
-
                         const match = await bcrypt.compare(password, item.password);
-                        console.log('====================================')
-                        console.log(match)
-                        console.log('====================================')
                         if (match) {
-
                             if (item.name === username) {
                                 data = []
                                 return cb(null, true)
