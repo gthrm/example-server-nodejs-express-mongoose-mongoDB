@@ -45,6 +45,20 @@ const ImgSchema = new Schema({
     type: Date
   }
 });
+const ImageSchema = new Schema({
+  data: {
+    type: Buffer,
+    required: true
+  },
+  contentType: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: new Date()
+  }
+});
 const ItemSchema = new Schema({
   title: {
     type: String,
@@ -76,3 +90,5 @@ _mongoose.default.model('Img', ImgSchema);
 _mongoose.default.model('User', UserSchema);
 
 _mongoose.default.model('Item', ItemSchema);
+
+_mongoose.default.model('Image', ImageSchema);

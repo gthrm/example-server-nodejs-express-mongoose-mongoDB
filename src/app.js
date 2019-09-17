@@ -1,18 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-
 import basicAuth from "express-basic-auth";
-
-
-import * as db from './utils/DataBaseUtils';
-import fs from 'fs';
 import https from 'https';
 import http from 'http';
 import path from 'path';
 
+import * as db from './utils/DataBaseUtils';
 import { serverPort } from "../etc/config.json";
-
+const multer = require('multer');
 const bcrypt = require('bcrypt');
 
 // const options = {
@@ -34,6 +30,13 @@ app.use(
     })
 );
 
+// app.use(multer({
+//     dest: './uploads/',
+//     rename: function (fieldname, filename) {
+//         return filename;
+//     },
+// }));
+
 app.get('/users', (req, res) => {
     console.log('====================================')
     console.log(req.query)
@@ -54,7 +57,8 @@ app.get('/images', (req, res) => {
 });
 
 app.post('/images', (req, res) => {
-    db.createImage(req.body).then(async data => await res.send(data)).catch(err => res.send(err))
+    console.log(req.files)
+    db.createImage(req).then(data => res.send(data)).catch(err => res.send(err))
 });
 
 app.patch('/images/:id', (req, res) => {

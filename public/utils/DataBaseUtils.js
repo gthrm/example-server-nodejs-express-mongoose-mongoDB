@@ -6,11 +6,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.setUpConnection = setUpConnection;
 exports.listUsers = listUsers;
 exports.createUser = createUser;
+exports.getImage = getImage;
 exports.listImages = listImages;
 exports.createImage = createImage;
 exports.getData = getData;
-exports.updateImage = updateImage;
-exports.getImage = getImage;
 exports.listItems = listItems;
 exports.getItems = getItems;
 exports.createItems = createItems;
@@ -20,6 +19,8 @@ exports.checkExpired = checkExpired;
 require("core-js/modules/es6.array.sort");
 
 var _mongoose = _interopRequireDefault(require("mongoose"));
+
+var _fs = _interopRequireDefault(require("fs"));
 
 var _config = _interopRequireDefault(require("../../etc/config.json"));
 
@@ -36,6 +37,8 @@ const User = _mongoose.default.model('User');
 const Img = _mongoose.default.model('Img');
 
 const Item = _mongoose.default.model('Item');
+
+const Image = _mongoose.default.model('Image');
 
 function setUpConnection() {
   _mongoose.default.connect("mongodb://".concat(_config.default.db.username, ":").concat(_config.default.db.pass, "@").concat(_config.default.db.host, ":").concat(_config.default.db.port, "/").concat(_config.default.db.name));
@@ -69,46 +72,36 @@ async function createUser(data) {
   return user.save();
 }
 
-function listImages(page) {
+function getImage(id) {
+  return Image.findOne({
+    _id: id
+  });
+}
+
+function listImages() {
+  let page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
   // return Img.find();
-  let images;
-
-  if (page !== undefined) {
-    images = page * 10;
-  } else {
-    images = 0;
-  }
-
-  return Img.find().sort('createdAt').skip(images).limit(10);
+  let images = page * 10;
+  return Image.find().sort('createdAt').skip(images).limit(10);
 }
 
 function createImage(data) {
-  const img = new Img({
-    title: data.title,
-    url: data.url,
-    createdAt: new Date()
-  });
-  return img.save();
-}
+  // const image = new Image({
+  //     data: fs.readFileSync(data.files.userPhoto.path),
+  //     contentType: 'image/png',
+  //     createdAt: new Date()
+  // });
+  // console.log('====================================')
+  // console.log(data.prototypeModel)
+  // console.log('====================================')
+  return console.dir(data.files); // return data
+} // export function updateImage(id, params) {
+//     return Image.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
+// }
+
 
 function getData() {
   return Img.find();
-}
-
-function updateImage(id, params) {
-  return Img.findOneAndUpdate({
-    _id: id
-  }, {
-    $set: params
-  }, {
-    new: true
-  });
-}
-
-function getImage(id) {
-  return Img.findOne({
-    _id: id
-  });
 }
 
 function listItems() {

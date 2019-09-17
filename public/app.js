@@ -8,21 +8,21 @@ var _bodyParser = _interopRequireDefault(require("body-parser"));
 
 var _expressBasicAuth = _interopRequireDefault(require("express-basic-auth"));
 
-var db = _interopRequireWildcard(require("./utils/DataBaseUtils"));
-
-var _fs = _interopRequireDefault(require("fs"));
-
 var _https = _interopRequireDefault(require("https"));
 
 var _http = _interopRequireDefault(require("http"));
 
 var _path = _interopRequireDefault(require("path"));
 
+var db = _interopRequireWildcard(require("./utils/DataBaseUtils"));
+
 var _config = require("../etc/config.json");
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const multer = require('multer');
 
 const bcrypt = require('bcrypt'); // const options = {
 //     key: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/myjpg.ru', 'privkey.pem')),
@@ -39,7 +39,13 @@ app.use((0, _cors.default)({
 app.use((0, _expressBasicAuth.default)({
   authorizer: myAsyncAuthorizer,
   authorizeAsync: true
-}));
+})); // app.use(multer({
+//     dest: './uploads/',
+//     rename: function (fieldname, filename) {
+//         return filename;
+//     },
+// }));
+
 app.get('/users', (req, res) => {
   console.log('====================================');
   console.log(req.query);
@@ -59,7 +65,8 @@ app.get('/images', (req, res) => {
   db.listImages(req.query.page).then(async data => await res.send(data)).catch(err => res.send(err));
 });
 app.post('/images', (req, res) => {
-  db.createImage(req.body).then(async data => await res.send(data)).catch(err => res.send(err));
+  console.log(req.files);
+  db.createImage(req).then(data => res.send(data)).catch(err => res.send(err));
 });
 app.patch('/images/:id', (req, res) => {
   db.updateImage(req.params.id, req.body).then(data => res.send(data)).catch(err => res.send(err));

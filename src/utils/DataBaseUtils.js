@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import fs from 'fs';
+
 import config from '../../etc/config.json';
 import '../models/Model';
 
@@ -8,6 +10,7 @@ const saltRounds = 10;
 const User = mongoose.model('User');
 const Img = mongoose.model('Img');
 const Item = mongoose.model('Item');
+const Image = mongoose.model('Image');
 
 export function setUpConnection() {
     mongoose.connect(`mongodb://${config.db.username}:${config.db.pass}@${config.db.host}:${config.db.port}/${config.db.name}`);
@@ -41,37 +44,36 @@ export async function createUser(data) {
     return user.save();
 }
 
-export function listImages(page) {
+export function getImage(id) {
+    return Image.findOne({ _id: id });
+}
+
+export function listImages(page = 0) {
     // return Img.find();
-    let images;
-    if (page !== undefined) {
-        images = page * 10
-    } else {
-        images = 0
-    }
-    return Img.find().sort('createdAt').skip(images).limit(10);
+    let images = page * 10;
+
+    return Image.find().sort('createdAt').skip(images).limit(10);
 }
 
 export function createImage(data) {
-    const img = new Img({
-        title: data.title,
-        url: data.url,
-        createdAt: new Date()
-    });
-
-    return img.save();
+    // const image = new Image({
+    //     data: fs.readFileSync(data.files.userPhoto.path),
+    //     contentType: 'image/png',
+    //     createdAt: new Date()
+    // });
+    // console.log('====================================')
+    // console.log(data.prototypeModel)
+    // console.log('====================================')
+    return console.dir(data.files)
+    // return data
 }
+
+// export function updateImage(id, params) {
+//     return Image.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
+// }
 
 export function getData() {
     return Img.find();
-}
-
-export function updateImage(id, params) {
-    return Img.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
-}
-
-export function getImage(id) {
-    return Img.findOne({ _id: id });
 }
 
 export function listItems(page = 0, expiried) {

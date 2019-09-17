@@ -20,8 +20,9 @@ const ImgSchema = new Schema({
 });
 
 const ImageSchema = new Schema({
-    data     : { type: Buffer, contentType: String, required: true },
-    createdAt: { type: Date, default: new Date() }
+    data        : { type: Buffer, required: true },
+    contentType : { type: String, required: true },
+    createdAt   : { type: Date, default: new Date() }
 });
 
 const ItemSchema = new Schema({
