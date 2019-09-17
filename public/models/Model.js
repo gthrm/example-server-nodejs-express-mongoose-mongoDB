@@ -45,7 +45,34 @@ const ImgSchema = new Schema({
     type: Date
   }
 });
+const ItemSchema = new Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String
+  },
+  deleted: {
+    type: Boolean,
+    default: false
+  },
+  expiriesDate: {
+    type: Date,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: new Date()
+  },
+  expiried: {
+    type: Boolean,
+    default: false
+  }
+});
 
 _mongoose.default.model('Img', ImgSchema);
 
 _mongoose.default.model('User', UserSchema);
+
+_mongoose.default.model('Item', ItemSchema);

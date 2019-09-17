@@ -1,14 +1,13 @@
 import mongoose from "mongoose";
 import config from '../../etc/config.json';
 import '../models/Model';
-import { throws } from "assert";
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 const User = mongoose.model('User');
 const Img = mongoose.model('Img');
-let now = new Date();
+const Item = mongoose.model('Item');
 
 export function setUpConnection() {
     mongoose.connect(`mongodb://${config.db.username}:${config.db.pass}@${config.db.host}:${config.db.port}/${config.db.name}`);
@@ -67,11 +66,57 @@ export function getData() {
     return Img.find();
 }
 
-export function getImage(id) {
-    return Img.findOne({ _id: id });
-}
-
 export function updateImage(id, params) {
     return Img.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
 }
 
+export function getImage(id) {
+    return Img.findOne({ _id: id });
+}
+
+export function listItems(page = 0, expiried) {
+    let item = page * 10
+    let expiredValue = expiried ? { "expiried": expiried } : undefined;
+    // console.log('====================================')
+    // console.log(page, expiried)
+    // console.log('====================================')
+    return Item.find(expiredValue).sort('createdAt').skip(item).limit(10);
+}
+
+export function getItems(id) {
+
+    return Item.findOne({ _id: id });
+}
+
+export function createItems(data) {
+    const item = new Item({
+        title: data.title,
+        description: data.description,
+        deleted: data.deleted,
+        expiriesDate: data.expiriesDate
+    });
+    return item.save();
+}
+
+export function updateItems(id, params) {
+    return Item.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
+}
+
+export async function checkExpired() {
+    return listItems()
+        .then(
+            data => {
+                const filterItems = data.filter(item => {
+                    let newDate = new Date(item.expiriesDate);
+                    newDate.setMonth(newDate.getMonth() - 3); //минус три месяца на реализацию
+                    console.log(newDate < new Date(), new Date(item.expiriesDate));
+
+                    return newDate < new Date()
+                });
+                return filterItems;
+            }
+        )
+        .catch(
+            err => err
+        )
+}

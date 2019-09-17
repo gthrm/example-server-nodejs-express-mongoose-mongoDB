@@ -64,6 +64,11 @@ app.post('/images', (req, res) => {
 app.patch('/images/:id', (req, res) => {
   db.updateImage(req.params.id, req.body).then(data => res.send(data)).catch(err => res.send(err));
 });
+app.get('/items', (req, res) => db.listItems(req.query.page, req.query.expiried).then(data => res.send(data)).catch(err => res.send(err)));
+app.get('/items/:id', (req, res) => db.getItems(req.params.id).then(data => res.send(data)).catch(err => res.send(err)));
+app.post('/items', (req, res) => db.createItems(req.body).then(data => res.send(data)).catch(err => res.send(err)));
+app.patch('/items/:id', (req, res) => db.updateItems(req.params.id, req.body).then(data => res.send(data)).catch(err => res.send(err)));
+app.get('/check', (req, res) => db.checkExpired().then(data => res.send(data)).catch(err => res.send(err)));
 
 function myAsyncAuthorizer(username, password, cb) {
   db.listUsers().then(data => {

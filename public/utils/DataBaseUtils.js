@@ -9,8 +9,13 @@ exports.createUser = createUser;
 exports.listImages = listImages;
 exports.createImage = createImage;
 exports.getData = getData;
-exports.getImage = getImage;
 exports.updateImage = updateImage;
+exports.getImage = getImage;
+exports.listItems = listItems;
+exports.getItems = getItems;
+exports.createItems = createItems;
+exports.updateItems = updateItems;
+exports.checkExpired = checkExpired;
 
 require("core-js/modules/es6.array.sort");
 
@@ -19,8 +24,6 @@ var _mongoose = _interopRequireDefault(require("mongoose"));
 var _config = _interopRequireDefault(require("../../etc/config.json"));
 
 require("../models/Model");
-
-var _assert = require("assert");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -32,7 +35,7 @@ const User = _mongoose.default.model('User');
 
 const Img = _mongoose.default.model('Img');
 
-let now = new Date();
+const Item = _mongoose.default.model('Item');
 
 function setUpConnection() {
   _mongoose.default.connect("mongodb://".concat(_config.default.db.username, ":").concat(_config.default.db.pass, "@").concat(_config.default.db.host, ":").concat(_config.default.db.port, "/").concat(_config.default.db.name));
@@ -92,12 +95,6 @@ function getData() {
   return Img.find();
 }
 
-function getImage(id) {
-  return Img.findOne({
-    _id: id
-  });
-}
-
 function updateImage(id, params) {
   return Img.findOneAndUpdate({
     _id: id
@@ -106,4 +103,62 @@ function updateImage(id, params) {
   }, {
     new: true
   });
+}
+
+function getImage(id) {
+  return Img.findOne({
+    _id: id
+  });
+}
+
+function listItems() {
+  let page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  let expiried = arguments.length > 1 ? arguments[1] : undefined;
+  let item = page * 10;
+  let expiredValue = expiried ? {
+    "expiried": expiried
+  } : undefined; // console.log('====================================')
+  // console.log(page, expiried)
+  // console.log('====================================')
+
+  return Item.find(expiredValue).sort('createdAt').skip(item).limit(10);
+}
+
+function getItems(id) {
+  return Item.findOne({
+    _id: id
+  });
+}
+
+function createItems(data) {
+  const item = new Item({
+    title: data.title,
+    description: data.description,
+    deleted: data.deleted,
+    expiriesDate: data.expiriesDate
+  });
+  return item.save();
+}
+
+function updateItems(id, params) {
+  return Item.findOneAndUpdate({
+    _id: id
+  }, {
+    $set: params
+  }, {
+    new: true
+  });
+}
+
+async function checkExpired() {
+  return listItems().then(data => {
+    const filterItems = data.filter(item => {
+      let newDate = new Date(item.expiriesDate);
+      newDate.setMonth(newDate.getMonth() - 3); //минус три месяца на реализацию
+
+      console.log(newDate < new Date(), new Date(item.expiriesDate));
+      return newDate < new Date();
+    });
+    return filterItems;
+  }).catch(err => err);
 }
