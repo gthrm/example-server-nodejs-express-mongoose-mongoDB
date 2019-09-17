@@ -28,6 +28,7 @@ const ImageSchema = new Schema({
 const ItemSchema = new Schema({
     title       : { type: String, required: true },
     description : { type: String },
+    image       : { type: String },
     deleted     : { type: Boolean, default: false },
     expiriesDate: { type: Date, required: true },
     createdAt   : { type: Date, default: new Date() },

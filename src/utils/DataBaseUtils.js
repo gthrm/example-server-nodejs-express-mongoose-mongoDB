@@ -91,7 +91,8 @@ export function createItems(data) {
         title: data.title,
         description: data.description,
         deleted: data.deleted,
-        expiriesDate: data.expiriesDate
+        expiriesDate: data.expiriesDate,
+        image: data.image
     });
     return item.save();
 }

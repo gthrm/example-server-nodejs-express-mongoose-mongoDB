@@ -90,11 +90,7 @@ function createImage(file) {
     data: _fs.default.readFileSync(file.path),
     contentType: file.mimetype ? file.mimetype : 'image/png',
     createdAt: new Date()
-  }); // console.log('====================================')
-  // console.log(data.prototypeModel)
-  // console.log('====================================')
-  // return data
-
+  });
   return image.save();
 } // export function updateImage(id, params) {
 //     return Image.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
@@ -132,7 +128,8 @@ function createItems(data) {
     title: data.title,
     description: data.description,
     deleted: data.deleted,
-    expiriesDate: data.expiriesDate
+    expiriesDate: data.expiriesDate,
+    image: data.image
   });
   return item.save();
 }

@@ -35,9 +35,11 @@ const bcrypt = require('bcrypt'); // const options = {
 //     cert: fs.readFileSync(path.join(__dirname, '../../../etc/letsencrypt/live/site.ru', 'fullchain.pem'))
 // }
 
+
 const app = (0, _express.default)();
 db.setUpConnection();
-app.use(_bodyParser.default.json());
+app.use(_bodyParser.default.json()); // app.use(bodyParser.urlencoded({ extended: true }))
+
 app.use((0, _cors.default)({
   origin: '*'
 }));
@@ -45,7 +47,6 @@ app.use((0, _expressBasicAuth.default)({
   authorizer: myAsyncAuthorizer,
   authorizeAsync: true
 }));
-
 app.get('/users', (req, res) => {
   console.log('====================================');
   console.log(req.query);
@@ -75,10 +76,15 @@ app.post('/images', upload.single('file'), (req, res) => {
 
 
   db.createImage(file).then(data => res.send(data)).catch(err => res.send(err));
-});
-app.patch('/images/:id', (req, res) => {
-  db.updateImage(req.params.id, req.body).then(data => res.send(data)).catch(err => res.send(err));
-});
+}); // app.patch('/images/:id', (req, res) => {
+//     db.updateImage(req.params.id, req.body)
+//         .then(
+//             data => res.send(data)
+//         )
+//         .catch(
+//             err => res.send(err)
+//         )
+// });
 
 app.get('/items', (req, res) => db.listItems(req.query.page, req.query.expiried).then(data => res.send(data)).catch(err => res.send(err)));
 app.get('/items/:id', (req, res) => db.getItems(req.params.id).then(data => res.send(data)).catch(err => res.send(err)));
@@ -90,9 +96,6 @@ function myAsyncAuthorizer(username, password, cb) {
   db.listUsers().then(data => {
     data.forEach(async (item, i) => {
       const match = await bcrypt.compare(password, item.password);
-      // console.log('====================================');
-      // console.log(match);
-      // console.log('====================================');
 
       if (match) {
         if (item.name === username) {

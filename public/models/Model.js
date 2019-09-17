@@ -67,6 +67,9 @@ const ItemSchema = new Schema({
   description: {
     type: String
   },
+  image: {
+    type: String
+  },
   deleted: {
     type: Boolean,
     default: false
