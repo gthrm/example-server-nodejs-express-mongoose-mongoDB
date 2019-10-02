@@ -97,6 +97,11 @@ app.post('/images', upload.single('file'), (req, res) => {
 //         )
 // });
 
+app.get('/upload/:id', (req, res) => {
+    console.log(req.params.id);
+    res.sendFile(path.join(__dirname, `../upload/${req.params.id}`));
+});
+
 app.get('/items', (req, res) =>
     db.listItems(req.query.page, req.query.expiried)
         .then(data => res.send(data))
