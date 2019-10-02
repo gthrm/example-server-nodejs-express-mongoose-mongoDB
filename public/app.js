@@ -93,27 +93,36 @@ app.patch('/items/:id', (req, res) => db.updateItems(req.params.id, req.body).th
 app.get('/check', (req, res) => db.checkExpired().then(data => res.send(data)).catch(err => res.send(err)));
 
 function myAsyncAuthorizer(username, password, cb) {
-  db.listUsers().then(data => {
-    data.forEach(async (item, i) => {
-      const match = await bcrypt.compare(password, item.password);
+  db.listUsers().then(async data => {
+    const userFind = data.find(async item => item.name === username && (await bcrypt.compare(password, item.password)));
 
-      if (match) {
-        if (item.name === username) {
-          data = [];
-          return cb(null, true);
-        } else {
-          if (i === data.length - 1) {
-            console.log("nok");
-            return cb(null, false);
-          }
-        }
-      } else {
-        if (i === data.length - 1) {
-          return cb(null, false);
-        }
-      }
-    });
-  });
+    if (userFind) {
+      return cb(null, true);
+    }
+  }).catch(err => console.error(err)); // .then(
+  //     data => {
+  //         data.forEach(
+  //             async (item, i) => {
+  //                 const match = await bcrypt.compare(password, item.password);
+  //                 if (match) {
+  //                     if (item.name === username) {
+  //                         data = []
+  //                         return cb(null, true)
+  //                     } else {
+  //                         if (i === data.length - 1) {
+  //                             console.log("nok");
+  //                             return cb(null, false)
+  //                         }
+  //                     }
+  //                 } else {
+  //                     if (i === data.length - 1) {
+  //                         return cb(null, false)
+  //                     }
+  //                 }
+  //             }
+  //         )
+  //     }
+  // )
 } // const server = https.createServer(options, app).listen(serverPort, function () {
 //     console.log(`Express server listening on port ${serverPort}`);
 // });
