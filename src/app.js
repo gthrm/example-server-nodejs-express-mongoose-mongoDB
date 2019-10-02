@@ -10,8 +10,20 @@ import fs from 'fs';
 import * as db from './utils/DataBaseUtils';
 import { serverPort } from "../etc/config.json";
 
+const mime = require('mime');
+const crypto = require('crypto');
 const multer = require('multer');
-const upload = multer({ dest: 'upload/' });
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './upload/')
+    },
+    filename: function (req, file, cb) {
+        crypto.pseudoRandomBytes(16, function (err, raw) {
+            cb(null, raw.toString('hex') + Date.now() + '.' + mime.extension(file.mimetype));
+        });
+    }
+});
+const upload = multer({ storage: storage });
 const bcrypt = require('bcrypt');
 
 // const options = {
@@ -63,9 +75,16 @@ app.post('/images', upload.single('file'), (req, res) => {
         error.httpStatusCode = 400
         return next(error)
     }
+    console.log('file', file)
     // res.send(file)
-
-    db.createImage(file).then(data => res.send(data)).catch(err => res.send(err))
+    if (file.size < 25000000) {
+        db.createImage(file).then(data => res.send(data)).catch(err => res.send(err))
+    } else {
+        res
+            .status(413)
+            .contentType("text/plain")
+            .end("File Too Large! Upload a file not exceeding 25 MB");
+    }
 });
 
 // app.patch('/images/:id', (req, res) => {

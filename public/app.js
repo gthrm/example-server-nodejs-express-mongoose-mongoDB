@@ -1,5 +1,7 @@
 "use strict";
 
+require("core-js/modules/es6.regexp.to-string");
+
 var _express = _interopRequireDefault(require("express"));
 
 var _cors = _interopRequireDefault(require("cors"));
@@ -24,10 +26,24 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+const mime = require('mime');
+
+const crypto = require('crypto');
+
 const multer = require('multer');
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './upload/');
+  },
+  filename: function filename(req, file, cb) {
+    crypto.pseudoRandomBytes(16, function (err, raw) {
+      cb(null, raw.toString('hex') + Date.now() + '.' + mime.extension(file.mimetype));
+    });
+  }
+});
 const upload = multer({
-  dest: 'upload/'
+  storage: storage
 });
 
 const bcrypt = require('bcrypt'); // const options = {
@@ -72,10 +88,15 @@ app.post('/images', upload.single('file'), (req, res) => {
     const error = new Error('Please upload a file');
     error.httpStatusCode = 400;
     return next(error);
-  } // res.send(file)
+  }
 
+  console.log('file', file); // res.send(file)
 
-  db.createImage(file).then(data => res.send(data)).catch(err => res.send(err));
+  if (file.size < 25000000) {
+    db.createImage(file).then(data => res.send(data)).catch(err => res.send(err));
+  } else {
+    res.status(413).contentType("text/plain").end("File Too Large! Upload a file not exceeding 25 MB");
+  }
 }); // app.patch('/images/:id', (req, res) => {
 //     db.updateImage(req.params.id, req.body)
 //         .then(
@@ -99,30 +120,7 @@ function myAsyncAuthorizer(username, password, cb) {
     if (userFind) {
       return cb(null, true);
     }
-  }).catch(err => console.error(err)); // .then(
-  //     data => {
-  //         data.forEach(
-  //             async (item, i) => {
-  //                 const match = await bcrypt.compare(password, item.password);
-  //                 if (match) {
-  //                     if (item.name === username) {
-  //                         data = []
-  //                         return cb(null, true)
-  //                     } else {
-  //                         if (i === data.length - 1) {
-  //                             console.log("nok");
-  //                             return cb(null, false)
-  //                         }
-  //                     }
-  //                 } else {
-  //                     if (i === data.length - 1) {
-  //                         return cb(null, false)
-  //                     }
-  //                 }
-  //             }
-  //         )
-  //     }
-  // )
+  }).catch(err => console.error(err));
 } // const server = https.createServer(options, app).listen(serverPort, function () {
 //     console.log(`Express server listening on port ${serverPort}`);
 // });

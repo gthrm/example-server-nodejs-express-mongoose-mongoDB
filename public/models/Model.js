@@ -46,11 +46,30 @@ const ImgSchema = new Schema({
   }
 });
 const ImageSchema = new Schema({
-  data: {
-    type: Buffer,
+  fieldname: {
+    type: String,
     required: true
   },
-  contentType: {
+  originalname: {
+    type: String
+  },
+  encoding: {
+    type: String
+  },
+  mimetype: {
+    type: String
+  },
+  destination: {
+    type: String
+  },
+  filename: {
+    type: String
+  },
+  path: {
+    type: String,
+    required: true
+  },
+  size: {
     type: String,
     required: true
   },

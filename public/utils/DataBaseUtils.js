@@ -86,12 +86,18 @@ function listImages() {
 }
 
 function createImage(file) {
-  const image = new Image({
-    data: _fs.default.readFileSync(file.path),
-    contentType: file.mimetype ? file.mimetype : 'image/png',
+  const newImage = new Image({
+    fieldname: file.fieldname,
+    originalname: file.originalname,
+    encoding: file.encoding,
+    mimetype: file.mimetype,
+    destination: file.destination,
+    filename: file.filename,
+    path: file.path,
+    size: file.size,
     createdAt: new Date()
   });
-  return image.save();
+  return newImage.save();
 } // export function updateImage(id, params) {
 //     return Image.findOneAndUpdate({ _id: id }, { $set: params }, { new: true });
 // }
