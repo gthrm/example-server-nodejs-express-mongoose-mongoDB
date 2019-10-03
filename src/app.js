@@ -127,11 +127,19 @@ app.get('/check', (req, res) =>
         .then(data => res.send(data))
         .catch(err => res.send(err)));
 
+
 function myAsyncAuthorizer(username, password, cb) {
     db.listUsers()
         .then(
             async data => {
-                const userFind = data.find(async item => item.name === username && await bcrypt.compare(password, item.password));
+                const itemList = await Promise.all(data.map(async item => {
+                    const passwordIsOk = await bcrypt.compare(password, item.password);
+                    const allIsOk = item.name === username && passwordIsOk;
+                    return Promise.resolve(allIsOk)
+                }));
+                const userFind = itemList.find(
+                    item => item === true
+                );
                 if (userFind) {
                     return cb(null, true)
                 }
