@@ -135,6 +135,7 @@ function myAsyncAuthorizer(username, password, cb) {
                 if (userFind) {
                     return cb(null, true)
                 }
+                return cb(null, false)
             }
         )
         .catch(
