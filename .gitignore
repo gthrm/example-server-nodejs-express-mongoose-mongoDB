@@ -2,6 +2,7 @@
 /coverage
 /lol
 /upload/*
+/build/*
 
 .DS_Store
 .env.local
