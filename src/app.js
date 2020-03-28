@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import basicAuth from 'express-basic-auth';
-
+import helmet from 'helmet';
+import 'log-timestamp';
 // Разкомментировать в продакшене для подключения SSL сертификата
 // import https from 'https';
 
@@ -43,6 +44,7 @@ db.setUpConnection();
 
 app.use(bodyParser.json());
 app.use(cors({origin: '*'}));
+app.use(helmet());
 app.use(
     basicAuth({
       authorizer: myAsyncAuthorizer,
