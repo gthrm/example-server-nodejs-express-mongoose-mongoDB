@@ -17,6 +17,18 @@ export function setUpConnection() {
 }
 
 /**
+ * Поиск юзеров по username
+ * @param {int} name - username
+ * @return {Array} - массив пользователей
+ */
+export function getUserByUserName(name) {
+  if (name) {
+    return User.find({name}).sort('createdAt');
+  }
+  return null;
+}
+
+/**
  * Поиск всех юзеров в базе
  * @param {int} page - страница выдачи
  * @return {Array} - массив пользователей
@@ -39,6 +51,10 @@ export function listUsers(page = 0) {
  * @return {object} - Объект с данными юзера по схеме User
  */
 export async function createUser(data) {
+  const findOtherUsersWithThisUserName = await getUserByUserName(data.name);
+  if (Array.isArray(findOtherUsersWithThisUserName) && findOtherUsersWithThisUserName.length > 0) {
+    return {error: 'User already exists'};
+  }
   const hash = await bcrypt.hash(data.password, saltRounds);
   const user = new User({
     name: data.name,

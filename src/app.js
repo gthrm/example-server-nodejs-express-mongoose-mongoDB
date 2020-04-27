@@ -59,7 +59,7 @@ app.get('/users', (req, res) => {
 
 app.post('/user', (req, res) => {
   db.createUser(req.body).then((data) => {
-    console.log(data); res.send(data);
+    console.log('post user ', data); res.send(data);
   }).catch((err) => res.send(err));
 });
 
@@ -135,28 +135,26 @@ app.get('/check', (req, res) =>
  * @param {string} password - пароль
  * @param {string} cb - callback
  */
-function myAsyncAuthorizer(username, password, cb) {
-  db.listUsers()
-      .then(
-          (data) => {
-            const itemList = data.map(async (item) => ({
-              ...item,
-              valid: await bcrypt.compare(password, item.password),
-            }));
-            Promise.all(itemList)
-                .then(
-                    (completed) => {
-                      const itemOkList = completed.find((item) => item.valid === true && item._doc.name === username);
-                      if (itemOkList) {
-                        return cb(null, true);
-                      }
-                      return cb(null, false);
-                    });
-          },
-      )
-      .catch(
-          (err) => console.error(err),
-      );
+async function myAsyncAuthorizer(username, password, cb) {
+  try {
+    const users = await db.getUserByUserName(username);
+    const usersList = users.map(async (item) => ({
+      ...item,
+      valid: await bcrypt.compare(password, item.password),
+    }));
+    Promise.all(usersList)
+        .then(
+            (completed) => {
+              const itemOkList = completed.find((item) => item.valid === true && item._doc.name === username);
+              if (itemOkList) {
+                return cb(null, true);
+              }
+              return cb(null, false);
+            });
+  } catch (error) {
+    (err) => console.error(err);
+    return cb(null, false);
+  }
 }
 
 // https.createServer(options, app).listen(serverPort, function () {
