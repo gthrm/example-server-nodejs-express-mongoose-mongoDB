@@ -53,7 +53,7 @@ export function listUsers(page = 0) {
 export async function createUser(data) {
   const findOtherUsersWithThisUserName = await getUserByUserName(data.name);
   if (Array.isArray(findOtherUsersWithThisUserName) && findOtherUsersWithThisUserName.length > 0) {
-    return {error: 'User already exists'};
+    return {error: {code: 409, message: 'User already exists'}};
   }
   const hash = await bcrypt.hash(data.password, saltRounds);
   const user = new User({

@@ -58,9 +58,15 @@ app.get('/users', (req, res) => {
 });
 
 app.post('/user', (req, res) => {
-  db.createUser(req.body).then((data) => {
-    console.log('post user ', data); res.send(data);
-  }).catch((err) => res.send(err));
+  db.createUser(req.body)
+      .then((data) => {
+        console.log('post user ', data);
+        if (data.error) {
+          res.status(data.error.code || 500);
+        }
+        res.send(data);
+      })
+      .catch((err) => res.send(err));
 });
 
 app.get('/images/:id', (req, res) => {
