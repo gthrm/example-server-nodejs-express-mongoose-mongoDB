@@ -1,5 +1,6 @@
 {
     "serverPort": "8080",
+    "secret": "secretWord",
     "db": {
         "username": "username_db",
         "pass": "pass_bd",

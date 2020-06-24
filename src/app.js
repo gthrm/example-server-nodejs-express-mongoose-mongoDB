@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import 'log-timestamp';
@@ -15,7 +14,9 @@ import path from 'path';
 // import fs from 'fs';
 
 import * as db from './utils/DataBaseUtils';
-import {serverPort} from '../etc/config.json';
+import {PORT} from '../etc/config.json';
+import {HandlerGenerator} from './utils/otherUtils';
+import {checkToken} from './utils/JWTAuthorizer';
 
 const limiter = rateLimit({
   windowMs: 2 * 60 * 1000, // 2 minutes
@@ -37,7 +38,8 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({storage: storage});
-const bcrypt = require('bcrypt');
+
+const handlers = new HandlerGenerator();
 
 // Разкомментировать в продакшене для подключения SSL сертификата
 // const options = {
@@ -47,21 +49,18 @@ const bcrypt = require('bcrypt');
 
 const app = express();
 
+const server = http.createServer(app);
+
 db.setUpConnection();
 
 app.use(bodyParser.json());
 app.use(cors({origin: '*'}));
 app.use(helmet());
 app.use(limiter);
-app.use(
-    basicAuth({
-      authorizer: myAsyncAuthorizer,
-      authorizeAsync: true,
-    }),
-);
 
+app.post('/auth', handlers.login);
 
-app.get('/users', (req, res) => {
+app.get('/users', checkToken, (req, res) => {
   db.listUsers(req.query.page).then((data) => res.send(data)).catch((err) => res.send(err));
 });
 
@@ -77,15 +76,15 @@ app.post('/user', (req, res) => {
       .catch((err) => res.send(err));
 });
 
-app.get('/images/:id', (req, res) => {
+app.get('/images/:id', checkToken, (req, res) => {
   db.getImage(req.params.id).then((data) => res.send(data)).catch((err) => res.send(err));
 });
 
-app.get('/images', (req, res) => {
+app.get('/images', checkToken, (req, res) => {
   db.listImages(req.query.page).then((data) => res.send(data)).catch((err) => res.send(err));
 });
 
-app.post('/images', upload.single('file'), (req, res) => {
+app.post('/images', checkToken, upload.single('file'), (req, res) => {
   const file = req.file;
   if (!file) {
     const error = new Error('Please upload a file');
@@ -118,62 +117,34 @@ app.get('/upload/:id', (req, res) => {
   res.sendFile(path.join(__dirname, `../upload/${req.params.id}`));
 });
 
-app.get('/items', (req, res) =>
+app.get('/items', checkToken, (req, res) =>
   db.listItems(req.query.page, req.query.expiried)
       .then((data) => res.send(data))
       .catch((err) => res.send(err)));
 
-app.get('/items/:id', (req, res) =>
+app.get('/items/:id', checkToken, (req, res) =>
   db.getItems(req.params.id)
       .then((data) => res.send(data))
       .catch((err) => res.send(err)));
 
-app.post('/items', (req, res) =>
+app.post('/items', checkToken, (req, res) =>
   db.createItems(req.body)
       .then((data) => res.send(data))
       .catch((err) => res.send(err)));
 
-app.patch('/items/:id', (req, res) =>
+app.patch('/items/:id', checkToken, (req, res) =>
   db.updateItems(req.params.id, req.body)
       .then((data) => res.send(data))
       .catch((err) => res.send(err)));
 
-app.get('/check', (req, res) =>
+app.get('/check', checkToken, (req, res) =>
   db.checkExpired()
       .then((data) => res.send(data))
       .catch((err) => res.send(err)));
 
-/**
- * Функция авторизации пользователя из базы
- * @param {string} username - имя пользователя
- * @param {string} password - пароль
- * @param {string} cb - callback
- */
-async function myAsyncAuthorizer(username, password, cb) {
-  try {
-    const users = await db.getUserByUserName(username);
-    const usersList = users.map(async (item) => ({
-      ...item,
-      valid: await bcrypt.compare(password, item.password),
-    }));
-    Promise.all(usersList)
-        .then(
-            (completed) => {
-              const itemOkList = completed.find((item) => item.valid === true && item._doc.name === username);
-              if (itemOkList) {
-                return cb(null, true);
-              }
-              return cb(null, false);
-            });
-  } catch (error) {
-    (err) => console.error(err);
-    return cb(null, false);
-  }
-}
-
-// https.createServer(options, app).listen(serverPort, function () {
-//     console.log(`Express server listening on port ${serverPort}`);
+// server.listen(PORT, function () {
+//     console.log(`Express server listening on port ${PORT}`);
 // });
-http.createServer(app).listen(serverPort, function() {
-  console.log(`Express server listening on port ${serverPort}`);
+server.listen(PORT, function() {
+  console.log(`Express server listening on port ${PORT}, open`, 'chrome://inspect', 'to debug');
 });
