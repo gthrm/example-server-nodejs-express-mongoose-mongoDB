@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import 'log-timestamp';
 // Разкомментировать в продакшене для подключения SSL сертификата
 // import https from 'https';
@@ -15,6 +16,12 @@ import path from 'path';
 
 import * as db from './utils/DataBaseUtils';
 import {serverPort} from '../etc/config.json';
+
+const limiter = rateLimit({
+  windowMs: 2 * 60 * 1000, // 2 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: {error: {code: 429, message: 'Too many requests from your IP. Please wait 2 Minutes'}},
+});
 
 const mime = require('mime');
 const crypto = require('crypto');
@@ -45,6 +52,7 @@ db.setUpConnection();
 app.use(bodyParser.json());
 app.use(cors({origin: '*'}));
 app.use(helmet());
+app.use(limiter);
 app.use(
     basicAuth({
       authorizer: myAsyncAuthorizer,
